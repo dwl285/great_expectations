@@ -3,12 +3,14 @@ from typing import Dict, Optional
 import numpy as np
 
 from great_expectations.core import ExpectationConfiguration
+from great_expectations.data_context.types.base import renderedAtomicValueSchema
 from great_expectations.exceptions import InvalidExpectationConfigurationError
 from great_expectations.execution_engine import ExecutionEngine
 from great_expectations.expectations.expectation import ColumnExpectation
 from great_expectations.expectations.util import render_evaluation_parameter_string
 from great_expectations.render.renderer.renderer import renderer
 from great_expectations.render.types import (
+    RenderedAtomicContent,
     RenderedStringTemplateContent,
     RenderedTableContent,
 )
@@ -234,50 +236,51 @@ class ExpectColumnQuantileValuesToBeBetween(ColumnExpectation):
                     str(value_range[1]) if value_range[1] is not None else "Any",
                 ]
             )
-        return ("fdsfdsfdsfsd", {}, {})
-        # return (expectation_string_obj, table_header_row, table_rows)
+        return (expectation_string_obj, table_header_row, table_rows)
 
-    # @classmethod
-    # # @renderer(renderer_type="atomic.prescriptive.summary")
-    # def _prescriptive_summary(
-    #     cls,
-    #     configuration=None,
-    #     result=None,
-    #     language=None,
-    #     runtime_configuration=None,
-    #     **kwargs,
-    # ):
-    #     (
-    #         expectation_string_obj,
-    #         table_header_row,
-    #         table_rows,
-    #     ) = cls._atomic_prescriptive_template(
-    #         configuration, result, language, runtime_configuration, **kwargs
-    #     )
-    #
-    #     # this will have to change:
-    #     # NAME
-    #     # VALUE
-    #     # VALUE TYPE
-    #
-    #     # THIS IS WOULD BE ULTIMATE WHAT THE FE is using
-    #     #
-    #     # ADD TO MARSHMALLOW
-    #     # SO WE CAN GET VALIDATION
-    #     # ALL POSSIBLE ATTRIBUTES
-    #     # IF VALUE TYPE IS ?? THEN WE SHOULD EXPECT OTHER ATTRIBUTES
-    #     # WE SHOULD BE ABLE TO ENFORCE SCHEMA
-    #     # OBJECT : ATOMIC RENDERED CONTENT :
-    #     # { Name, VALUE, VALUE TYPE}
-    #     ########
-    #     # VALUE_TYPE :
-    #     rendered = {
-    #         "content_block_type": "table",
-    #         "string": expectation_string_obj,
-    #         "header_row": table_header_row,
-    #         "table_rows": table_rows,
-    #     }
-    #     return [rendered]
+    @classmethod
+    @renderer(renderer_type="atomic.prescriptive.summary")
+    def _prescriptive_summary(
+        cls,
+        configuration=None,
+        result=None,
+        language=None,
+        runtime_configuration=None,
+        **kwargs,
+    ):
+        (
+            expectation_string_obj,
+            table_header_row,
+            table_rows,
+        ) = cls._atomic_prescriptive_template(
+            configuration, result, language, runtime_configuration, **kwargs
+        )
+
+        string_template = expectation_string_obj["string_template"]
+
+        header_component = renderedAtomicValueSchema.load(
+            {
+                "template": string_template["template"],
+                "params": string_template["params"],
+                "schema": {"type": "com.superconductive.rendered.string"},
+            }
+        )
+
+        table = renderedAtomicValueSchema.load(
+            {
+                "header": header_component,
+                "header_row": table_header_row,
+                "table": table_rows,
+                "schema": {"type": "com.superconductive.rendered.table"},
+            }
+        )
+
+        rendered = RenderedAtomicContent(
+            name="atomic.prescriptive.summary",
+            value=[table],
+            valuetype="TableType",
+        )
+        return rendered
 
     @classmethod
     @renderer(renderer_type="renderer.prescriptive")

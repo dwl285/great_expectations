@@ -103,7 +103,16 @@ class ExpectColumnValuesToNotBeNull(ColumnMapExpectation):
             configuration.kwargs,
             ["column", "mostly", "row_condition", "condition_parser"],
         )
+        """
+        Before
+        # old guy can consume directly
+        params["mostly"] = 1
 
+        After
+        #
+        params["mostly"] = {value: 1, schema = {"type": "int"}}
+
+        """
         if params["mostly"] is not None:
             params["mostly_pct"] = num_to_str(
                 params["mostly"] * 100, precision=15, no_scientific=True
@@ -121,6 +130,10 @@ class ExpectColumnValuesToNotBeNull(ColumnMapExpectation):
             else:
                 template_str = "values must never be null."
 
+        # ATOMIC PARAMS :
+        ##################
+        #### MORE COMPLICATED PARAMS HERE:
+
         if params["row_condition"] is not None:
             (
                 conditional_template_str,
@@ -129,6 +142,8 @@ class ExpectColumnValuesToNotBeNull(ColumnMapExpectation):
             template_str = conditional_template_str + ", then " + template_str
             params.update(conditional_params)
 
+            #### params is currently a dictionary .
+            # - name and string
         return (template_str, params, styling)
 
     @classmethod
@@ -145,13 +160,18 @@ class ExpectColumnValuesToNotBeNull(ColumnMapExpectation):
         (template_str, params, styling) = cls._atomic_prescriptive_template(
             configuration, result, language, runtime_configuration, kwargs
         )
+
+        # simplifying it for _prescriptive renderer
         return [
             RenderedStringTemplateContent(
                 **{
                     "content_block_type": "string_template",
                     "string_template": {
                         "template": template_str,
-                        "params": params,
+                        "params": {
+                            param: value_dict["value"]
+                            for param, value_dict in params.items()
+                        },
                         "styling": styling,
                     },
                 }
