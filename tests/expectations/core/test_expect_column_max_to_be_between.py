@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from dateutil.parser import parse
+from datetime import datetime
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import DataContext
@@ -40,8 +40,8 @@ def test_expect_column_values_to_be_increasing_warn_parse_strings_as_datetimes(
     with pytest.warns(DeprecationWarning) as record:
         validator.expect_column_max_to_be_between(
             column="a",
-            min_value=parse("2021-02-20"),
-            max_value=parse("2021-07-20"),
+            min_value=datetime.strptime("2021-02-20", "%Y-%m-%d"),
+            max_value=datetime.strptime("2021-07-20", "%Y-%m-%d"),
             parse_strings_as_datetimes=True,
         )
     assert (
