@@ -6,7 +6,7 @@ from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import DataContext
 
 
-def test_expect_column_values_to_be_increasing_warn_parse_strings_as_datetimes(
+def test_expect_column_max_to_be_between_warn_parse_strings_as_datetimes(
     data_context_with_datasource_pandas_engine,
 ):
     context: DataContext = data_context_with_datasource_pandas_engine
