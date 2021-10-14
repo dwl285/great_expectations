@@ -38,7 +38,10 @@ future release.  Please update code accordingly.
                 DeprecationWarning,
             )
 
-            temp_column = column.map(parse)
+            try:
+                temp_column = column.map(parse)
+            except TypeError:
+                temp_column = column
             return temp_column.max()
         else:
             return column.max()
@@ -49,7 +52,12 @@ future release.  Please update code accordingly.
             kwargs.get("parse_strings_as_datetimes") or False
         )
         if parse_strings_as_datetimes:
-            raise NotImplementedError
+            warnings.warn(
+                f"""The parameter "parse_strings_as_datetimes" is no longer supported and will be deprecated in a \
+future release.  Please update code accordingly.  Moreover, in "{cls.__name__}._sqlalchemy()", it is not used.
+""",
+                DeprecationWarning,
+            )
 
         return sa.func.max(column)
 
@@ -66,6 +74,9 @@ future release.  Please update code accordingly.
                 DeprecationWarning,
             )
 
-            column = apply_dateutil_parse(column=column)
+            try:
+                column = apply_dateutil_parse(column=column)
+            except TypeError:
+                pass
 
         return F.max(column)
